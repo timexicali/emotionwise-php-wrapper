@@ -161,6 +161,91 @@ class EmotionwiseClientTest extends TestCase
         self::assertSame('plain text response', $client->request('GET', '/api/v1/health'));
     }
 
+    public function testSubmitFeedbackSendsAllFields(): void
+    {
+        $client = new MockEmotionwiseClient(
+            apiKey: 'test-key',
+            responseStatusCode: 200,
+            responseBody: '{"ok":true}',
+        );
+
+        $client->submitFeedback(
+            text: 'I am happy but a bit nervous',
+            predictedEmotions: ['joy', 'nervousness'],
+            suggestedEmotions: ['optimism'],
+            predictedSarcasm: false,
+            sarcasmFeedback: null,
+            comment: 'Pretty accurate',
+            languageCode: 'en',
+        );
+
+        $body = json_decode($client->lastBody ?? '', true);
+
+        self::assertSame('I am happy but a bit nervous', $body['text']);
+        self::assertSame(['joy', 'nervousness'], $body['predicted_emotions']);
+        self::assertSame(['optimism'], $body['suggested_emotions']);
+        self::assertFalse($body['predicted_sarcasm']);
+        self::assertSame('Pretty accurate', $body['comment']);
+        self::assertSame('en', $body['language_code']);
+        self::assertArrayNotHasKey('sarcasm_feedback', $body);
+    }
+
+    public function testSubmitFeedbackRejectsEmptyText(): void
+    {
+        $client = new MockEmotionwiseClient(
+            apiKey: 'test-key',
+            responseStatusCode: 200,
+            responseBody: '{"ok":true}',
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('text must not be empty');
+        $client->submitFeedback(text: '   ', predictedEmotions: ['joy']);
+    }
+
+    public function testSubmitFeedbackRejectsEmptyPredictedEmotions(): void
+    {
+        $client = new MockEmotionwiseClient(
+            apiKey: 'test-key',
+            responseStatusCode: 200,
+            responseBody: '{"ok":true}',
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('predictedEmotions must not be empty');
+        $client->submitFeedback(text: 'hello', predictedEmotions: []);
+    }
+
+    public function testSubmitFeedbackRejectsInvalidEmotionLabels(): void
+    {
+        $client = new MockEmotionwiseClient(
+            apiKey: 'test-key',
+            responseStatusCode: 200,
+            responseBody: '{"ok":true}',
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('predictedEmotions contains invalid emotion labels: [happiness]');
+        $client->submitFeedback(text: 'hello', predictedEmotions: ['happiness']);
+    }
+
+    public function testSubmitFeedbackRejectsInvalidSuggestedEmotions(): void
+    {
+        $client = new MockEmotionwiseClient(
+            apiKey: 'test-key',
+            responseStatusCode: 200,
+            responseBody: '{"ok":true}',
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('suggestedEmotions contains invalid emotion labels: [mad]');
+        $client->submitFeedback(
+            text: 'hello',
+            predictedEmotions: ['joy'],
+            suggestedEmotions: ['mad'],
+        );
+    }
+
     public function testCustomHeadersCannotOverrideApiKey(): void
     {
         $client = new MockEmotionwiseClient(

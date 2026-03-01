@@ -10,6 +10,37 @@ use InvalidArgumentException;
 
 class EmotionwiseClient
 {
+    public const VALID_EMOTIONS = [
+        'admiration',
+        'amusement',
+        'anger',
+        'annoyance',
+        'approval',
+        'caring',
+        'confusion',
+        'curiosity',
+        'desire',
+        'disappointment',
+        'disapproval',
+        'disgust',
+        'embarrassment',
+        'excitement',
+        'fear',
+        'gratitude',
+        'grief',
+        'joy',
+        'love',
+        'nervousness',
+        'optimism',
+        'pride',
+        'realization',
+        'relief',
+        'remorse',
+        'sadness',
+        'surprise',
+        'neutral',
+    ];
+
     private string $baseUrl;
 
     public function __construct(
@@ -115,6 +146,20 @@ class EmotionwiseClient
         string $languageCode = 'en',
         string $endpoint = '/api/v1/feedback/submit',
     ): mixed {
+        if (trim($text) === '') {
+            throw new InvalidArgumentException('text must not be empty.');
+        }
+
+        if ($predictedEmotions === []) {
+            throw new InvalidArgumentException('predictedEmotions must not be empty.');
+        }
+
+        $this->validateEmotionLabels($predictedEmotions, 'predictedEmotions');
+
+        if ($suggestedEmotions !== null) {
+            $this->validateEmotionLabels($suggestedEmotions, 'suggestedEmotions');
+        }
+
         $payload = [
             'text' => $text,
             'predicted_emotions' => $predictedEmotions,
@@ -139,6 +184,19 @@ class EmotionwiseClient
 
     public function close(): void
     {
+    }
+
+    /**
+     * @param list<string> $labels
+     */
+    private function validateEmotionLabels(array $labels, string $paramName): void
+    {
+        $invalid = array_diff($labels, self::VALID_EMOTIONS);
+        if ($invalid !== []) {
+            throw new InvalidArgumentException(
+                sprintf('%s contains invalid emotion labels: [%s]', $paramName, implode(', ', $invalid))
+            );
+        }
     }
 
     /**

@@ -32,11 +32,33 @@ var_dump($result);
 - `POST /api/v1/tools/emotion-detector`
 - Message length: min `1`, max `1000` characters.
 
+## Detector Response
+
+The detector returns:
+
+| Field              | Description                          |
+|--------------------|--------------------------------------|
+| `detected_emotions`| List of detected emotion labels      |
+| `confidence_scores`| Confidence score per emotion         |
+| `sarcasm_detected` | Whether sarcasm was detected (beta)  |
+| `sarcasm_score`    | Sarcasm confidence score (beta)      |
+| `detected_language`| Detected language of the input       |
+| `session_id`       | Session identifier for the request   |
+
+> **Sarcasm fields are experimental.** Do not use this API as the sole basis for legal, medical, hiring, or safety-critical decisions.
+
 ## Feedback Endpoint
 
 - `POST /api/v1/feedback/submit`
+- Both `predictedEmotions` and `suggestedEmotions` are validated against the set of accepted labels.
 
-Example:
+### Valid Emotion Labels
+
+`admiration`, `amusement`, `anger`, `annoyance`, `approval`, `caring`, `confusion`, `curiosity`, `desire`, `disappointment`, `disapproval`, `disgust`, `embarrassment`, `excitement`, `fear`, `gratitude`, `grief`, `joy`, `love`, `nervousness`, `optimism`, `pride`, `realization`, `relief`, `remorse`, `sadness`, `surprise`, `neutral`
+
+These are also available as `EmotionwiseClient::VALID_EMOTIONS`.
+
+### Example
 
 ```php
 <?php
