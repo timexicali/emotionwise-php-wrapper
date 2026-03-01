@@ -2,6 +2,12 @@
 
 PHP wrapper for the `emotionwise.ai` API using `X-API-Key` authentication.
 
+## Get an API Key
+
+1. Go to [emotionwise.ai](https://emotionwise.ai)
+2. Sign up and create an account
+3. Generate an API key from your dashboard
+
 ## Install
 
 ```bash
